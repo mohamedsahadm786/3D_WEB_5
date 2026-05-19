@@ -138,8 +138,10 @@ export default function HeroCanvas() {
       const t = clock.getElapsedTime();
       const dt = clock.getDelta();
 
-      // scrubbed scroll progress drives the camera dolly + form scale
-      scrollN = chapterProgress ? chapterProgress.get() : 0;
+      // scrubbed scroll progress drives the camera dolly + form scale —
+      // remapped so the glob fully zooms in by 22% of the chapter, then holds
+      // (it is faded out after that as the phone act takes over)
+      scrollN = Math.min(1, (chapterProgress ? chapterProgress.get() : 0) / 0.22);
 
       core.rotation.x = t * 0.12;
       core.rotation.z = t * 0.05;

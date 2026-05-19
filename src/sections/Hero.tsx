@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import { motion, useMotionValue, useTransform } from 'motion/react';
 import Img from '@/components/Img';
 import Chapter, { useChapterProgress } from '@/components/Chapter';
+import PhoneShowcase from '@/components/PhoneShowcase';
 import { useTypewriter } from '@/hooks/useTypewriter';
 import { scrollToId } from '@/components/SmoothScroll';
 
@@ -15,11 +16,16 @@ const EASE = [0.22, 1, 0.36, 1] as const;
 /* Three.js scene is split into its own chunk — loads after first paint */
 const HeroCanvas = lazy(() => import('@/components/HeroCanvas'));
 
-/* The hero is a pinned chapter: scroll scrubs the 3D camera dolly while the
- * content drifts up and dissolves — the reader's first "room". */
+/*
+ * Act 1 — one long pinned chapter that runs two scenes back to back:
+ *   0    → 0.22  golden glob zooms in, hero text drifts out
+ *   0.22 → 0.36  glob fades out / hand-phone showcase fades in (crossfade)
+ *   0.36 → 0.92  phone screens animate (lock up → home → dashboard)
+ *   0.92 → 1     hold, then the chapter unpins → globe carousel
+ */
 export default function Hero() {
   return (
-    <Chapter id="home" distance={1.3} scrub={1}>
+    <Chapter id="home" distance={4} scrub={1}>
       <HeroInner />
     </Chapter>
   );
@@ -31,10 +37,12 @@ function HeroInner() {
   /* scrubbed to the chapter's pinned scroll progress */
   const fallback = useMotionValue(0);
   const progress = useChapterProgress() ?? fallback;
-  const bgY = useTransform(progress, [0, 1], ['0%', '18%']);
-  const contentY = useTransform(progress, [0, 0.6], [0, -96]);
-  const contentFade = useTransform(progress, [0, 0.55], [1, 0]);
-  const cueFade = useTransform(progress, [0, 0.18], [1, 0]);
+  const bgY = useTransform(progress, [0, 1], ['0%', '10%']);
+  const contentY = useTransform(progress, [0, 0.16], [0, -96]);
+  const contentFade = useTransform(progress, [0.03, 0.15], [1, 0]);
+  const cueFade = useTransform(progress, [0, 0.06], [1, 0]);
+  /* glob fades out as the phone act crossfades in */
+  const globFade = useTransform(progress, [0.22, 0.36], [1, 0]);
 
   return (
     <div className="relative flex flex-1 items-center justify-center">
@@ -45,10 +53,15 @@ function HeroInner() {
       {/* warm wash for legibility */}
       <div className="absolute inset-0 bg-gradient-to-b from-bg/55 via-bg/30 to-bg" />
 
-      {/* live WebGL motes + form — camera scrubs to chapter progress */}
-      <Suspense fallback={null}>
-        <HeroCanvas />
-      </Suspense>
+      {/* Act 1a — live WebGL glob; zooms in, then fades for the phone act */}
+      <motion.div style={{ opacity: globFade }} className="absolute inset-0">
+        <Suspense fallback={null}>
+          <HeroCanvas />
+        </Suspense>
+      </motion.div>
+
+      {/* Act 1b — hand-phone showcase crossfades in and runs its slide animation */}
+      <PhoneShowcase progress={progress} range={[0.36, 0.92]} />
 
       {/* content */}
       <motion.div

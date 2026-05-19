@@ -123,6 +123,35 @@
   space. The globe is now 6 faces (Features, About, Products, WhyUs, HelpCTA,
   Testimonials); `Marquee.tsx` is left in the repo unused.
 
+## Hand-phone scroll act in the hero
+- Studied `hand/instruction.md` + the live reference (alluvi.bz) and added the
+  scroll-driven "hand holding a phone" animation between the glob and the globe
+  carousel.
+- New `src/components/PhoneShowcase.tsx` — static hand+phone photo with 3
+  screens that SLIDE in a clipped cut-out (lock slides up → home revealed →
+  dashboard slides in from the right), scrubbed to chapter progress; keyframes
+  verbatim from the instruction doc.
+- Hand-phone images copied to `public/hand/` (clean names).
+- `Hero` is now one long pinned chapter (`distance` 1.3 → 4) running two acts:
+  0–22% glob zooms in + text drifts out, 22–36% glob fades out / phone
+  crossfades in, 36–92% phone screens animate, then unpins → globe carousel.
+- `HeroCanvas` — glob zoom remapped to finish by 22% of the chapter, then it
+  fades out (`globFade`).
+- Reduced motion: the phone act stays hidden (consistent with the rest of the
+  site degrading to static).
+- Verified live: full sequence plays + reverses, cut-out sits on the glass,
+  desktop + mobile, no horizontal overflow; `tsc` + `npm run build` clean.
+- Fix: screens now sit BEHIND the phone photo and show through its transparent
+  glass hole (the photo's alpha has a real screen-shaped hole) — so the phone's
+  own rounded corners + notch frame them. Glass rect measured from the alpha
+  channel (centre 30.26%/33.84%, 42.94%×64.21%, upright); screens use
+  `object-contain` on a black backing. Replaces the earlier on-top cut-out
+  that cropped/misfit the screens.
+- Rounded the screen box (`border-radius` on `GLASS.radius`) so the screen
+  corners curve to match the phone's screen — no square poke at the corners.
+- Closed a hairline gap at the top: re-measured the hole top (1.47%) and
+  extended the screen box up to over-cover it (sides + bottom unchanged).
+
 ## Golden cursor on dark pages
 - The custom `Cursor` turns golden (`gold-light`) while hovering a dark/brown
   area; stays the default noir cursor over light pages. It detects
