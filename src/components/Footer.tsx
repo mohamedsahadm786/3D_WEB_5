@@ -14,7 +14,7 @@ export default function Footer() {
   };
 
   return (
-    <footer className="relative overflow-hidden bg-noir text-bg">
+    <footer data-dark className="relative overflow-hidden bg-noir text-bg">
       <div className="grain-layer absolute inset-0 opacity-[0.06]" />
 
       {/* giant faint watermark */}

@@ -62,3 +62,78 @@
 - Still open: only the Hero is a true pinned chapter so far; the other
   sections carry the scrubbed feel via the reveals but are not yet pinned
   "rooms" — a follow-up increment.
+
+## Menu overlay polish
+- Reduced the overlay menu size: nav items `clamp(2.6→1.7rem … 6.2→3.4rem)`,
+  index numerals `0.9→0.65rem`, tighter spacing/margins.
+- Fixed dead nav links: the `grain-layer` div sat above the menu buttons and
+  ate every click — added `pointer-events-none`. Items now navigate.
+- White custom cursor on the dark menu: `Header` toggles a `menu-open` class on
+  `<html>`; `Cursor` dot/ring tagged `cursor-dot`/`cursor-ring`; `index.css`
+  scopes the white override to `.menu-open` only.
+- `ALLUVI` wordmark and the `Buy Now` button turn golden (`gold-light`) while
+  the menu overlay is open.
+
+## Cart + search
+- New `src/lib/cart.tsx` — `CartProvider` / `useCart`: line items, count,
+  subtotal, `localStorage` persistence, and shared cart-drawer open state.
+  `priceValue` matches the digit-led number token (the `د.إ` mark itself
+  contains a period, so a plain non-digit strip produced `NaN`).
+- New `src/components/CartDrawer.tsx` — slide-in cart panel: line items with
+  image + qty stepper, remove, subtotal, clear, and a WhatsApp checkout
+  (pre-fills the order — the brand's stated ordering channel; no checkout
+  backend exists). Empty state links to the shop.
+- New `src/components/SearchOverlay.tsx` — full-screen product search that
+  live-filters the catalogue by name; results link to product pages.
+- `Header`: cart icon is now a button that opens the drawer (with a live
+  count badge); added a search icon next to it; body scroll locks for the
+  menu, search, or cart. App wrapped in `CartProvider` (`main.tsx`).
+- `Product` page: the `Add to Cart` button now adds the chosen quantity and
+  opens the cart drawer.
+- Verified live: search filters + links, add-to-cart, qty steppers,
+  qty-to-zero removal, empty state, subtotal maths; `npm run build` clean.
+
+## Rotating "globe" page carousel
+- Replaced the earlier ArcSection approach (removed) with a 3D globe carousel,
+  per clarified intent: pages 2+ do not scroll vertically — scroll rotates a
+  faceted globe and the next page swings in from the right.
+- New `src/components/GlobeCarousel.tsx` — pins to the viewport; scroll is
+  converted (GSAP ScrollTrigger pin + scrub + snap) into a Y-axis rotation of
+  a 7-sided prism. Each section is a face: `rotateY(i·seg) translateZ(R)`; the
+  prism sits back `translateZ(-R)` so the front face is on the camera plane.
+  Radius/perspective recomputed on resize. Reduced motion → plain vertical
+  stack (no pin, no 3D).
+- New `src/components/FitToScreen.tsx` — measures a section's natural height
+  and uniformly downscales it so each "page" fits one viewport with no
+  internal scrolling.
+- `Reveal.tsx` — added `RevealStaticContext`; inside the globe, scroll-scrubbed
+  reveals render statically (a non-scrolling face would otherwise leave them
+  invisible).
+- `index.css` — `.globe-scene/prism/face` 3D rules; `.globe-face section`
+  padding trimmed so sections fit; `overflow-x: hidden` on `html, body`.
+- `Home` — Hero (normal) → `GlobeCarousel` faces Features…Testimonials →
+  Contact (normal) → footer.
+- Verified live: globe rotates + snaps per face, all 7 faces opaque/readable/
+  fit one screen, Hero unchanged, Contact normal after the globe, reduced
+  motion falls back to a stack, no horizontal overflow; `tsc` + `npm run
+  build` clean, 0 console errors.
+- Known limitation: in-page nav (menu links, ChapterNav dots) scrolls to the
+  globe but does not yet rotate it to the targeted face.
+- Dropped the Marquee from the globe — as a full face it was near-empty dark
+  space. The globe is now 6 faces (Features, About, Products, WhyUs, HelpCTA,
+  Testimonials); `Marquee.tsx` is left in the repo unused.
+
+## Golden cursor on dark pages
+- The custom `Cursor` turns golden (`gold-light`) while hovering a dark/brown
+  area; stays the default noir cursor over light pages. It detects
+  `closest('[data-dark]')` in the pointermove handler.
+- `data-dark` is set on dark globe faces (`bg` includes `noir` — WhyUs,
+  HelpCTA) and on the `Footer`. The `.menu-open` white-cursor override still
+  wins on the menu overlay.
+
+## Docs
+- Added `changes/instruction.md` — a standalone A-to-Z recreation guide for the
+  hero "golden glob scroll-zoom" effect (concept, libraries, full code for
+  `gsap.ts` / `Chapter` / `HeroCanvas` / `Hero` / `SmoothScroll`, step-by-step
+  rebuild, tuning knobs, a11y/perf, pitfalls, non-React adaptation). Intended
+  to be dropped into another repo as a build brief.

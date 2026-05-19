@@ -26,6 +26,9 @@
     padding: 0;
     background: var(--bg);
     color: var(--ink);
+    /* the 3D globe carousel projects faces past the viewport edges — clip it
+       page-wide so it never adds a horizontal scrollbar */
+    overflow-x: hidden;
   }
 
   body {
@@ -124,12 +127,36 @@
   }
 }
 
+/* 3D globe carousel */
+.globe-scene {
+  perspective: 1900px; /* overridden per-viewport in GlobeCarousel */
+  perspective-origin: 50% 48%;
+}
+.globe-prism {
+  transform-style: preserve-3d;
+}
+.globe-face {
+  backface-visibility: hidden;
+}
+/* trim the tall section padding so each section fits one globe face */
+.globe-face section {
+  padding-block: clamp(2rem, 6vh, 4.5rem);
+}
+
 /* fine-pointer only custom cursor */
 @media (hover: hover) and (pointer: fine) {
   .has-cursor,
   .has-cursor * {
     cursor: none;
   }
+}
+
+/* white custom cursor while the dark menu overlay is open */
+.menu-open .cursor-dot {
+  background-color: #fff;
+}
+.menu-open .cursor-ring {
+  border-color: rgba(255, 255, 255, 0.55);
 }
 
 @media (prefers-reduced-motion: reduce) {

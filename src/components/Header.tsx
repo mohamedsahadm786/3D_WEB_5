@@ -2,11 +2,16 @@ import { useEffect, useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { AnimatePresence, motion } from 'motion/react';
 import { NAV, BRAND } from '@/lib/site';
+import { useCart } from '@/lib/cart';
 import { scrollToId } from './SmoothScroll';
+import CartDrawer from './CartDrawer';
+import SearchOverlay from './SearchOverlay';
 
 export default function Header() {
   const [scrolled, setScrolled] = useState(false);
   const [open, setOpen] = useState(false);
+  const [searchOpen, setSearchOpen] = useState(false);
+  const { count, drawerOpen, openDrawer } = useCart();
   const loc = useLocation();
   const nav = useNavigate();
 
@@ -18,8 +23,12 @@ export default function Header() {
   }, []);
 
   useEffect(() => {
-    document.body.style.overflow = open ? 'hidden' : '';
-  }, [open]);
+    document.body.style.overflow =
+      open || searchOpen || drawerOpen ? 'hidden' : '';
+    /* drives the white cursor + golden header on the menu overlay */
+    document.documentElement.classList.toggle('menu-open', open);
+    return () => document.documentElement.classList.remove('menu-open');
+  }, [open, searchOpen, drawerOpen]);
 
   /* nav links may point to /#anchor — resolve to smooth-scroll on home */
   const go = (href: string) => {
@@ -85,28 +94,56 @@ export default function Header() {
           {/* center — wordmark */}
           <button
             onClick={() => go('/#home')}
-            className="display absolute left-1/2 -translate-x-1/2 text-[1.6rem] tracking-[0.2em] sm:text-[1.9rem]"
+            className={`display absolute left-1/2 -translate-x-1/2 text-[1.6rem] tracking-[0.2em] transition-colors duration-400 ease-lux sm:text-[1.9rem] ${
+              open ? 'text-gold-light' : ''
+            }`}
           >
             {BRAND.name}
           </button>
 
           {/* right — actions */}
-          <div className="flex items-center gap-5">
+          <div className="flex items-center gap-4 sm:gap-5">
             <Link
               to="/shop"
-              className="eyebrow hidden border border-current/40 px-5 py-2.5 transition-colors duration-400 hover:bg-noir hover:text-bg sm:block"
+              className={`eyebrow hidden border px-5 py-2.5 transition-colors duration-400 sm:block ${
+                open
+                  ? 'border-gold-light/50 text-gold-light hover:bg-gold-light hover:text-noir'
+                  : 'border-current/40 hover:bg-noir hover:text-bg'
+              }`}
             >
               Buy Now
             </Link>
-            <Link to="/shop" aria-label="Cart" className="relative">
+            <button
+              onClick={() => setSearchOpen(true)}
+              aria-label="Search"
+              className="transition-colors duration-300 hover:text-gold"
+            >
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" className="stroke-current">
+                <circle cx="11" cy="11" r="7" strokeWidth="1.2" />
+                <path d="m20 20-3.8-3.8" strokeWidth="1.2" />
+              </svg>
+            </button>
+            <button
+              onClick={openDrawer}
+              aria-label={`Cart${count > 0 ? ` — ${count} item${count === 1 ? '' : 's'}` : ''}`}
+              className="relative transition-colors duration-300 hover:text-gold"
+            >
               <svg width="22" height="22" viewBox="0 0 24 24" fill="none" className="stroke-current">
                 <path d="M6 8h12l-1 12H7L6 8Z" strokeWidth="1.2" />
                 <path d="M9 8V6a3 3 0 0 1 6 0v2" strokeWidth="1.2" />
               </svg>
-            </Link>
+              {count > 0 && (
+                <span className="absolute -right-2 -top-2 grid h-[18px] min-w-[18px] place-items-center rounded-full bg-gold px-1 text-[0.62rem] font-label leading-none text-bg">
+                  {count}
+                </span>
+              )}
+            </button>
           </div>
         </div>
       </header>
+
+      <SearchOverlay open={searchOpen} onClose={() => setSearchOpen(false)} />
+      <CartDrawer />
 
       {/* full-screen overlay nav */}
       <AnimatePresence>
@@ -118,15 +155,15 @@ export default function Header() {
             exit={{ clipPath: 'inset(0 0 100% 0)' }}
             transition={{ duration: 0.7, ease: [0.22, 1, 0.36, 1] }}
           >
-            <div className="grain-layer absolute inset-0 opacity-[0.07]" />
+            <div className="grain-layer pointer-events-none absolute inset-0 opacity-[0.07]" />
             <div className="shell flex h-full flex-col justify-center pt-20">
-              <span className="eyebrow mb-10 text-gold-light">Navigation</span>
-              <ul className="space-y-1">
+              <span className="eyebrow mb-7 text-gold-light">Navigation</span>
+              <ul className="space-y-0.5">
                 {NAV.map((item, i) => (
                   <li key={item.label} className="line-mask">
                     <motion.button
                       onClick={() => go(item.href)}
-                      className="display block py-1 text-[clamp(2.6rem,9vw,6.2rem)] leading-[1.04] text-bg/90 transition-colors duration-300 hover:text-gold-light"
+                      className="display block py-1 text-[clamp(1.7rem,5vw,3.4rem)] leading-[1.1] text-bg/90 transition-colors duration-300 hover:text-gold-light"
                       initial={{ y: '110%' }}
                       animate={{ y: '0%' }}
                       exit={{ y: '110%' }}
@@ -136,7 +173,7 @@ export default function Header() {
                         ease: [0.22, 1, 0.36, 1],
                       }}
                     >
-                      <span className="text-gold-light/50 mr-5 align-super text-[0.9rem] font-label tracking-normal">
+                      <span className="text-gold-light/50 mr-4 align-super text-[0.65rem] font-label tracking-normal">
                         0{i + 1}
                       </span>
                       {item.label}
@@ -145,7 +182,7 @@ export default function Header() {
                 ))}
               </ul>
               <motion.div
-                className="mt-14 flex flex-wrap items-center gap-x-8 gap-y-2 text-bg/55"
+                className="mt-10 flex flex-wrap items-center gap-x-8 gap-y-2 text-bg/55"
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 exit={{ opacity: 0 }}

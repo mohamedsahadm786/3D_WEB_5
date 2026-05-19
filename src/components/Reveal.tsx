@@ -1,6 +1,13 @@
-import { useRef, type ReactNode } from 'react';
+import { createContext, useContext, useRef, type ReactNode } from 'react';
 import { motion, useScroll, useTransform } from 'motion/react';
 import { prefersReducedMotion } from '@/lib/motionPrefs';
+
+/*
+ * When true (provided by GlobeCarousel) reveals render statically. Their
+ * sections sit on non-scrolling 3D globe faces, so a scroll-scrubbed reveal
+ * would otherwise never play and the content would stay invisible.
+ */
+export const RevealStaticContext = createContext(false);
 
 /*
  * Scroll-scrubbed reveals.
@@ -24,6 +31,7 @@ interface RevealProps {
 export function Reveal({ children, delay = 0, y = 30, className, as = 'div' }: RevealProps) {
   const ref = useRef<HTMLElement>(null);
   const M = motion[as];
+  const forceStatic = useContext(RevealStaticContext);
   const { scrollYProgress } = useScroll({
     target: ref,
     offset: ['start 0.96', 'start 0.62'],
@@ -37,7 +45,7 @@ export function Reveal({ children, delay = 0, y = 30, className, as = 'div' }: R
   /* motion[as] is polymorphic — its ref union can't be expressed precisely */
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const setRef = ref as any;
-  if (prefersReducedMotion()) {
+  if (prefersReducedMotion() || forceStatic) {
     return (
       <M ref={setRef} className={className}>
         {children}
@@ -69,7 +77,8 @@ export function LineReveal({
   stagger = 0.09,
 }: LineRevealProps) {
   const ref = useRef<HTMLSpanElement>(null);
-  const reduced = prefersReducedMotion();
+  const forceStatic = useContext(RevealStaticContext);
+  const reduced = prefersReducedMotion() || forceStatic;
   const { scrollYProgress } = useScroll({
     target: ref,
     offset: ['start 0.96', 'start 0.62'],

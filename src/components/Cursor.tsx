@@ -9,6 +9,8 @@ export default function Cursor() {
   const [enabled, setEnabled] = useState(false);
   const [hot, setHot] = useState(false);
   const [down, setDown] = useState(false);
+  /* golden cursor while hovering a dark / brown section */
+  const [onDark, setOnDark] = useState(false);
 
   const x = useMotionValue(-100);
   const y = useMotionValue(-100);
@@ -28,6 +30,7 @@ export default function Cursor() {
       y.set(e.clientY);
       const t = e.target as HTMLElement;
       setHot(!!t.closest('a, button, [data-hot]'));
+      setOnDark(!!t.closest('[data-dark]'));
     };
     const dn = () => setDown(true);
     const up = () => setDown(false);
@@ -48,11 +51,15 @@ export default function Cursor() {
   return (
     <div className="pointer-events-none fixed inset-0 z-[200]" aria-hidden>
       <motion.div
-        className="absolute h-1.5 w-1.5 rounded-full bg-noir"
+        className={`cursor-dot absolute h-1.5 w-1.5 rounded-full ${
+          onDark ? 'bg-gold-light' : 'bg-noir'
+        }`}
         style={{ x, y, translateX: '-50%', translateY: '-50%' }}
       />
       <motion.div
-        className="absolute rounded-full border border-noir/40"
+        className={`cursor-ring absolute rounded-full border ${
+          onDark ? 'border-gold-light/55' : 'border-noir/40'
+        }`}
         style={{ x: ringX, y: ringY, translateX: '-50%', translateY: '-50%' }}
         animate={{
           width: hot ? 56 : 34,

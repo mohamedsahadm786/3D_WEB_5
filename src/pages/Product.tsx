@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import { AnimatePresence, motion } from 'motion/react';
 import { getProduct, relatedProducts } from '@/lib/products';
+import { useCart } from '@/lib/cart';
 import Img from '@/components/Img';
 import ProductCard from '@/components/ProductCard';
 import { Reveal, LineReveal } from '@/components/Reveal';
@@ -17,6 +18,7 @@ const DETAILS = [
 export default function Product() {
   const { slug = '' } = useParams();
   const product = getProduct(slug);
+  const { add, openDrawer } = useCart();
 
   const [qty, setQty] = useState(1);
   const [shot, setShot] = useState(1);
@@ -133,7 +135,13 @@ export default function Product() {
                 </button>
               </div>
               {product.price ? (
-                <button className="eyebrow flex-1 bg-noir px-9 py-4 text-bg transition-transform duration-400 ease-lux hover:-translate-y-0.5">
+                <button
+                  onClick={() => {
+                    add(product.slug, qty);
+                    openDrawer();
+                  }}
+                  className="eyebrow flex-1 bg-noir px-9 py-4 text-bg transition-transform duration-400 ease-lux hover:-translate-y-0.5"
+                >
                   Add to Cart
                 </button>
               ) : (
